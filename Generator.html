@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline ID Hash Generator</title>
+    <script>
+        const wordList = [
+            "Apple", "Forest", "Tiger", "Castle", "River", "Rocket", "Sunset", "Bridge", "Storm", "Mountain",
+            "Falcon", "Canyon", "Echo", "Meadow", "Summit", "Lighthouse", "Horizon", "Harbor", "Clover", "Maple",
+            "Aurora", "Comet", "Glacier", "Thunder", "Pebble", "Zephyr", "Marble", "Cedar", "Breeze", "Wander", 
+            "Lantern", "Jungle", "Sapphire", "Hawk", "Timber", "Fox", "Drift", "Voyage", "Nimbus", "Quartz",
+            "Lagoon", "Frost", "Blizzard", "Shadow", "Amber", "Aspen", "Prairie", "Cove", "Gale", "Verdant",
+            "Echo", "Pioneer", "Mirage", "Grove", "Orchid", "Ripple", "Compass", "Shore", "Tundra", "Starling",
+            "... (Continue filling with 1024 words) ..."
+        ];
+
+        async function generateHash(orgToken, documentID, userPassphrase) {
+            const encoder = new TextEncoder();
+            const input = orgToken + documentID + userPassphrase;
+            const data = encoder.encode(input);
+            const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+            const hashArray = new Uint8Array(hashBuffer);
+
+            let words = [];
+            for (let i = 0; i < 4; i++) { // Select 4 words
+                let index = (hashArray[i * 2] << 8 | hashArray[i * 2 + 1]) % wordList.length;
+                words.push(wordList[index]);
+            }
+            return words.join("-");
+        }
+
+        async function generateAndDisplay() {
+            const orgToken = document.getElementById("orgToken").value;
+            const documentID = document.getElementById("documentID").value;
+            const userPassphrase = document.getElementById("userPassphrase").value;
+            
+            if (!orgToken || !documentID || !userPassphrase) {
+                alert("Please fill in all fields.");
+                return;
+            }
+            
+            const hash = await generateHash(orgToken, documentID, userPassphrase);
+            document.getElementById("hashOutput").innerText = "Generated Code: " + hash;
+        }
+    </script>
+</head>
+<body>
+    <h2>Offline ID Hash Generator</h2>
+    <label for="orgToken">Organization Token:</label>
+    <input type="text" id="orgToken"><br><br>
+    
+    <label for="documentID">Document ID:</label>
+    <input type="text" id="documentID"><br><br>
+    
+    <label for="userPassphrase">User Passphrase:</label>
+    <input type="password" id="userPassphrase"><br><br>
+    
+    <button onclick="generateAndDisplay()">Generate Code</button>
+    
+    <h3 id="hashOutput">Generated Code: </h3>
+</body>
+</html>
